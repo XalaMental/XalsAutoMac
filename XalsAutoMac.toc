@@ -1,0 +1,12 @@
+## Interface: 120007
+## Title: Xal's AutoMac
+## Notes: Generates personalized interrupt, leveling-aware healing potion, and DPS potion macros at the click of a button.
+## Author: Xal
+## X-Curse-Project-ID: 1652469
+## Version: 1.0.0
+## SavedVariables: XalsAutoMacDB
+## IconTexture: Interface\Icons\INV_Misc_Book_09
+
+BrandStyle.lua
+Core.lua
+WhatsNew.lua
