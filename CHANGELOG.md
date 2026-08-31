@@ -1,5 +1,14 @@
 # Xal's AutoMac - Changelog
 
+## 1.0.1 - August 31, 2026
+
+---
+
+Right on the heels of 1.0.0, I caught that the release workflow was missing a manual-run safety net the rest of my addons already carry - if a tag lands in the exact same push that first adds the release workflow file, GitHub can miss it and the release just quietly never fires. Nothing changes for you in-game with this one; it's me closing that gap so this addon's releases are as solid as everything else in the family.
+
+### 🔧 Fixed
+- Added a manual run option to the release workflow so a release can be started by hand if a tag ever arrives before GitHub's registered the workflow, instead of silently never firing.
+
 ## 1.0.0 - August 31, 2026
 
 ---
