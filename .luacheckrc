@@ -54,4 +54,9 @@ read_globals = {
     "PanelTemplates_SetTab",
     "Constants",
     "hooksecurefunc",
+    "LibStub",
+    "tinsert",
+    "UISpecialFrames",
+    "GameFontHighlightSmall",
+    "RaidWarningFrame",
 }
