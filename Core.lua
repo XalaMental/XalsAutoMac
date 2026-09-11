@@ -434,6 +434,162 @@ local function BuildDPSPotionMacro(byId)
 end
 
 --------------------------------------------------------------------------
+-- Suggested Macros -- a curated, class-specific list pulled directly from
+-- real player guides (Icy Veins, current retail patch), not invented or
+-- generated. Full source list with URLs: design/suggested_macros_research.md.
+-- Macro bodies are used verbatim as published -- spell names, conditionals,
+-- and all -- since these are real guide content, not IDs this addon has to
+-- resolve itself.
+--------------------------------------------------------------------------
+-- macroName is the real in-game macro name -- capped at 16 characters (the
+-- WoW client's own limit for CreateMacro), so it's a close abbreviation of
+-- the button text (name), not the literal button text itself.
+local SUGGESTED_MACROS = {
+    WARRIOR = {
+        { name = "Colossus Smash + Avatar", macroName = "CS + Avatar", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast Avatar\n/cast Colossus Smash" },
+        { name = "Charge + Victory Rush", macroName = "Charge+Victory", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast Charge\n/cast Victory Rush\n/cancelaura Bladestorm" },
+        { name = "Shield Slam + Ignore Pain", macroName = "ShieldSlam+IP", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast Ignore Pain\n/cast Shield Slam" },
+        { name = "Intervene / Charge", macroName = "Intervene/Chrg", icon = "inv_misc_questionmark",
+          body = "#showtooltip Charge\n/cast [target=mouseover,help,exists,nodead]Intervene;Intervene\n/cast [target=target,harm,exists,nodead]Charge;Charge" },
+    },
+    PALADIN = {
+        { name = "Divine Shield (early cancel)", macroName = "Divine Shield", icon = "inv_misc_questionmark",
+          body = "#showtooltip Divine Shield\n/stopcasting\n/cast Divine Shield\n/cancelaura [noknown:Final Stand] Divine Shield\n/cancelaura Blessing of Protection\n/cancelaura [known:Blessing of Spellwarding] Blessing of Spellwarding" },
+        { name = "Word of Glory (mouseover)", macroName = "WoG Mouseover", icon = "inv_misc_questionmark",
+          body = "#showtooltip Word of Glory\n/stopcasting\n/cast [@mouseover, help, nodead] [] Word of Glory" },
+        { name = "Lay on Hands (mouseover)", macroName = "LoH Mouseover", icon = "inv_misc_questionmark",
+          body = "#showtooltip Lay on Hands\n/stopcasting\n/cast [@mouseover,help,nodead] Lay on Hands" },
+        { name = "Blessing of Sacrifice (mouseover)", macroName = "BoSac Mouseovr", icon = "inv_misc_questionmark",
+          body = "#showtooltip Blessing of Sacrifice\n/stopcasting\n/cast [@mouseover,help,nodead] Blessing of Sacrifice" },
+        { name = "Holy Shock (mouseover)", macroName = "HS Mouseover", icon = "inv_misc_questionmark",
+          body = "#showtooltip Holy Shock\n/use [@mouseover,help,nodead][help,nodead][@player] Holy Shock" },
+    },
+    HUNTER = {
+        { name = "Pet Reset", macroName = "Pet Reset", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/petpassive\n/petfollow\n/use Dash" },
+        { name = "Kill Command (pet-safe)", macroName = "KC Pet-Safe", icon = "inv_misc_questionmark",
+          body = "#showtooltip Kill Command\n/petassist\n/petattack\n/cast [@pet,dead] Revive Pet;\n/cast [@pet,noexists,mod:shift] Revive Pet;\n/cast [@pet,noexists] Call Pet 1;\n/cast Kill Command" },
+        { name = "Aspect of the Turtle (early cancel)", macroName = "Turtle Cancel", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/stopcasting\n/stopcasting\n/use Aspect of the Turtle\n/cancelaura Aspect of the Turtle" },
+        { name = "Bestial Wrath (stealth-safe)", macroName = "BW Stealth-Safe", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cancelaura Shroud of Concealment\n/cancelaura Camouflage\n/use Bestial Wrath" },
+    },
+    ROGUE = {
+        { name = "Deathmark + Trinket", macroName = "Deathmark+Trink", icon = "inv_misc_questionmark",
+          body = "#showtooltip Deathmark\n/cast Deathmark\n/use 13" },
+        { name = "Coup de Grace + Black Powder", macroName = "CdG+BlackPowdr", icon = "inv_misc_questionmark",
+          body = "#showtooltip Black Powder\n/cast Coup de Grace\n/cast Black Powder" },
+        { name = "Shadow Blades + Trinkets + Potion", macroName = "ShadowBlades+CD", icon = "inv_misc_questionmark",
+          body = "#showtooltip Shadow Blades\n/cast Shadow Blades\n/use 13\n/use 14\n/use Light's Potential" },
+        { name = "Shadowstep (mouseover ally)", macroName = "Shadowstep MO", icon = "inv_misc_questionmark",
+          body = "#showtooltip Shadowstep\n/cast [target=mouseover,exists,noharm] Shadowstep" },
+    },
+    PRIEST = {
+        { name = "Power Infusion (mouseover/focus/self)", macroName = "PI Mouseover", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast [@mouseover,help,nodead][@focus,help,nodead][] Power Infusion\n/cast [@player] Power Infusion" },
+        { name = "Leap of Faith (mouseover)", macroName = "LoF Mouseover", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast [@mouseover,help,nodead][] Leap of Faith" },
+        { name = "Holy Word: Sanctify (cursor)", macroName = "HW:Sanctify Cur", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast [@cursor] Holy Word: Sanctify\n/stopspelltarget" },
+        { name = "Penance (offense)", macroName = "Penance Offense", icon = "inv_misc_questionmark",
+          body = "#showtooltip Penance\n/cast [harm] Penance" },
+        { name = "Penance (heal, mouseover)", macroName = "Penance Heal MO", icon = "inv_misc_questionmark",
+          body = "#showtooltip Penance\n/cast [@mouseover,help] Penance" },
+    },
+    DEATHKNIGHT = {
+        { name = "Gorefiend's Grasp (shift/mouseover/self)", macroName = "GFGrasp Multi", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast [mod:shift,@focus,exists][@mouseover,exists,nodead][@player] Gorefiend's Grasp" },
+        { name = "Death and Decay (cursor/self)", macroName = "DnD Cursor", icon = "inv_misc_questionmark",
+          body = "#showtooltip Death and Decay\n/cast [@cursor] Death and Decay; [mod:ctrl, @player] Death and Decay" },
+        { name = "Anti-Magic Zone (cursor)", macroName = "AMZ Cursor", icon = "inv_misc_questionmark",
+          body = "#showtooltip Anti-Magic Zone\n/cast [@cursor] Anti-Magic Zone" },
+        { name = "Re-control Ghoul", macroName = "Recontrol Ghoul", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/target pet\n/script PetDismiss()\n/cast Control Undead" },
+        { name = "Death Grip (mouseover)", macroName = "Death Grip MO", icon = "inv_misc_questionmark",
+          body = "#showtooltip Death Grip\n/cast [target=mouseover,exists] Death Grip; Death Grip" },
+    },
+    SHAMAN = {
+        { name = "Wind Rush Totem (cursor)", macroName = "WRT Cursor", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/stopcasting\n/cast [@cursor] Wind Rush Totem" },
+        { name = "Ancestral Swiftness + Lava Burst", macroName = "AS+LavaBurst", icon = "inv_misc_questionmark",
+          body = "#showtooltip Lava Burst\n/use Ancestral Swiftness\n/cast Lava Burst" },
+        { name = "Surging Totem on Lava Lash", macroName = "Surging on LL", icon = "inv_misc_questionmark",
+          body = "#showtooltip Lava Lash\n/cast Lava Lash\n/cast Surging Totem" },
+        { name = "Healing Rain (cursor)", macroName = "HealRain Cursor", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast [@cursor] Healing Rain" },
+        { name = "Chain Heal (mouseover)", macroName = "Chain Heal MO", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast [@mouseover,nodead,help] Chain Heal; Flame Shock" },
+    },
+    MAGE = {
+        { name = "1-Button Combustion", macroName = "1-Btn Combust", icon = "inv_misc_questionmark",
+          body = "#showtooltip Combustion\n/cast Ancestral Call\n/cast Berserking\n/cast Blood Fury\n/cast Combustion\n/use 13\n/use 14\n/use 16" },
+        { name = "1-Button Arcane Surge", macroName = "1-Btn ArcSurge", icon = "inv_misc_questionmark",
+          body = "#showtooltip Arcane Surge\n/cast Ancestral Call\n/cast Berserking\n/cast Blood Fury\n/cast Arcane Surge\n/use 13\n/use 14\n/use 16" },
+        { name = "Stopcast Blink", macroName = "Stopcast Blink", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/stopcasting\n/cast Blink" },
+        { name = "1-Button Ice Block", macroName = "1-Btn Ice Block", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/stopcasting\n/cancelaura Ice Block\n/cast Ice Block" },
+        { name = "Alter Time (early cancel)", macroName = "AlterTime Canc", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cancelaura Alter Time" },
+    },
+    WARLOCK = {
+        { name = "Banish (focus/target)", macroName = "Banish Focus", icon = "inv_misc_questionmark",
+          body = "#showtooltip Banish\n/use [mod:shift,@focus] [] Banish" },
+        { name = "Demonic Circle (place/teleport)", macroName = "DC Place/Tele", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/stopcasting\n/use [mod:shift] Demonic Circle(Summon); [nomod] Demonic Circle: Teleport(Teleport)" },
+        { name = "Corruption (mouseover)", macroName = "Corruption MO", icon = "inv_misc_questionmark",
+          body = "#showtooltip Corruption\n/use [@mouseover,harm] [harm] Corruption" },
+        { name = "Shadowfury / Howl of Terror", macroName = "SF/Howl Terror", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/use [known:Shadowfury,@cursor] Shadowfury; [known:Howl of Terror] Howl of Terror" },
+    },
+    MONK = {
+        { name = "Whirling Dragon Punch / Windlord", macroName = "WDP/Windlord", icon = "inv_misc_questionmark",
+          body = "#showtooltip [known:392983] Strike of the Windlord; Whirling Dragon Punch\n/stopmacro [channeling:Fists of Fury]\n/stopmacro [channeling:Celestial Conduit]\n/cast [known:152175] Whirling Dragon Punch\n/cast [known:392983] Strike of the Windlord" },
+        { name = "Celestial Brew / Infusion", macroName = "CelBrew/Infuse", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast [known:Celestial Brew] Celestial Brew\n/cast [known:Celestial Infusion] Celestial Infusion" },
+        { name = "Provoke (mouseover + Black Ox Statue)", macroName = "Provoke MO/BOS", icon = "inv_misc_questionmark",
+          body = "#showtooltip Provoke\n/cast [nomod,@mouseover,harm,nodead] Provoke\n/cast [nomod] Provoke\n/targetexact [mod:alt] Black Ox Statue\n/cast [mod:alt] Provoke\n/targetlasttarget [mod:alt,exists]" },
+        { name = "Detox (mouseover)", macroName = "Detox MO", icon = "inv_misc_questionmark",
+          body = "#showtooltip Detox\n/cast [@mouseover,help,nodead] Detox;Detox" },
+    },
+    DRUID = {
+        { name = "Rebirth (mouseover)", macroName = "Rebirth MO", icon = "inv_misc_questionmark",
+          body = "#showtooltip Rebirth\n/cast [@mouseover,help]Rebirth;Rebirth" },
+        { name = "Bear Form + Heart of the Wild", macroName = "Bear+HotW", icon = "inv_misc_questionmark",
+          body = "#showtooltip Heart of the Wild\n/cast [nostance:1] Bear Form\n/cast Heart of the Wild" },
+        { name = "Ursol's Vortex -> Typhoon", macroName = "Vortex>Typhoon", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/castsequence [@cursor] reset=20 Ursol's Vortex, Typhoon" },
+        { name = "Cancel Protection + Thrash", macroName = "CancelProt+Thr", icon = "inv_misc_questionmark",
+          body = "#showtooltip Thrash\n/cancelaura Blessing of Protection\n/cast Thrash" },
+    },
+    DEMONHUNTER = {
+        { name = "Consume Magic (focus)", macroName = "Consume Magic", icon = "inv_misc_questionmark",
+          body = "#showtooltip Consume Magic\n/cast [@focus,harm,nodead][] Consume Magic" },
+        { name = "Metamorphosis (cursor)", macroName = "Meta Cursor", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/stopcasting\n/cast [@cursor] Metamorphosis" },
+        { name = "Demon Spikes on Fracture", macroName = "DSpikes+Fractr", icon = "inv_misc_questionmark",
+          body = "#showtooltip Fracture\n/cast Demon Spikes\n/cast Fracture" },
+        { name = "Immolation Aura + Infernal Strike", macroName = "ImmoAura+Infrn", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast Immolation Aura\n/cast [@player] Infernal Strike" },
+        { name = "Torment (mouseover taunt)", macroName = "Torment MO", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast [@mouseover,harm,nodead][]Torment" },
+    },
+    EVOKER = {
+        { name = "Cauterizing Flame (mouseover)", macroName = "CautFlame MO", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast [@mouseover, help, nodead] [] Cauterizing Flame" },
+        { name = "Rescue (mouseover)", macroName = "Rescue MO", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast [@mouseover, help, nodead] [] Rescue" },
+        { name = "Fire Breath + Trinket", macroName = "FireBreath+Tri", icon = "inv_misc_questionmark",
+          body = "#showtooltip Fire Breath\n/use [mod:shift] 13\n/cast Fire Breath" },
+        { name = "Emerald Blossom (mouseover)", macroName = "EmBlossom MO", icon = "inv_misc_questionmark",
+          body = "#showtooltip\n/cast [@mouseover, help, nodead] [] Emerald Blossom" },
+    },
+}
+
+--------------------------------------------------------------------------
 -- Macro creation / update helper
 --------------------------------------------------------------------------
 local function CreateOrUpdateMacro(name, icon, body)
@@ -462,8 +618,6 @@ local FRAME_WIDTH = 380
 frame:SetSize(FRAME_WIDTH, 900)
 frame:SetFrameStrata("DIALOG")
 Brand.ApplyBackground(frame)
-Brand.ApplyBackgroundImage(frame)
-Brand.DrawBorder(frame)
 frame:SetPoint("CENTER", UIParent, "CENTER", 60, 220) -- placeholder until MacroFrame opens and repositions this, see below
 frame:SetToplevel(true)
 frame:Hide()
@@ -555,10 +709,8 @@ local function ReskinMacroFrame()
         MacroNewButton:SetPoint("BOTTOMRIGHT", MacroFrame, "BOTTOMRIGHT", -82 - INSET, 4 + INSET)
         MacroExitButton:SetPoint("BOTTOMRIGHT", MacroFrame, "BOTTOMRIGHT", -5 - INSET, 4 + INSET)
     end)
-    TryOrReport("background/border", function()
+    TryOrReport("background", function()
         Brand.ApplyBackground(MacroFrame)
-        Brand.ApplyBackgroundImage(MacroFrame)
-        Brand.DrawBorder(MacroFrame)
     end)
     TryOrReport("body text font", function()
         MacroFrameText:SetFont(Brand.BODY_FONT_PATH, 13, "")
@@ -752,13 +904,94 @@ for _, def in ipairs(slotDefs) do
 end
 
 --------------------------------------------------------------------------
+-- Suggested Macros -- a popup list of real, curated macros for the
+-- player's own class (never a browsable list of every class -- same rule
+-- as everything else in this addon). Clicking one creates/updates it and
+-- selects it in Blizzard's window, exactly like a Generate button.
+--------------------------------------------------------------------------
+local suggestedDivider = frame:CreateTexture(nil, "ARTWORK")
+suggestedDivider:SetColorTexture(0.16, 0.12, 0.05, 1)
+suggestedDivider:SetHeight(Brand.LINE_THICKNESS)
+suggestedDivider:SetPoint("TOPLEFT", lastSlotBtn, "BOTTOMLEFT", 0, -14)
+suggestedDivider:SetPoint("TOPRIGHT", lastSlotBtn, "BOTTOMRIGHT", 0, -14)
+
+local suggestedList = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+suggestedList:SetFrameStrata("TOOLTIP")
+suggestedList:SetWidth(FRAME_WIDTH - Brand.SAFE_MARGIN * 2 - 20)
+Brand.ApplyBackground(suggestedList)
+Brand.DrawBorder(suggestedList, 0)
+suggestedList:Hide()
+
+local suggestedEntries = SUGGESTED_MACROS[classToken] or {}
+local suggestedRowBtns = {}
+local SUGGESTED_ROW_H = 24
+for i, entry in ipairs(suggestedEntries) do
+    local row = CreateFrame("Button", nil, suggestedList)
+    row:SetHeight(SUGGESTED_ROW_H)
+    row:SetPoint("LEFT", suggestedList, "LEFT", 4, 0)
+    row:SetPoint("RIGHT", suggestedList, "RIGHT", -4, 0)
+    if i == 1 then
+        row:SetPoint("TOP", suggestedList, "TOP", 0, -4)
+    else
+        row:SetPoint("TOP", suggestedRowBtns[i - 1], "BOTTOM", 0, 0)
+    end
+    local label = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    label:SetPoint("LEFT", row, "LEFT", 6, 0)
+    label:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+    label:SetJustifyH("LEFT")
+    label:SetTextColor(Brand.GOLD[1], Brand.GOLD[2], Brand.GOLD[3])
+    label:SetText(entry.name)
+    row:SetScript("OnEnter", function() label:SetTextColor(1, 1, 1) end)
+    row:SetScript("OnLeave", function() label:SetTextColor(Brand.GOLD[1], Brand.GOLD[2], Brand.GOLD[3]) end)
+    row:SetScript("OnClick", function()
+        TryOrReport("suggested macro '" .. entry.name .. "'", function()
+            local ok, err = CreateOrUpdateMacro(entry.macroName, entry.icon, entry.body)
+            if ok then
+                SetStatus("'" .. entry.name .. "' ready -- review it in the window on the left.")
+                SelectMacroInBlizzardFrame(entry.macroName)
+            else
+                SetStatus(err, true)
+            end
+        end)
+        suggestedList:Hide()
+    end)
+    suggestedRowBtns[i] = row
+end
+suggestedList:SetHeight(SUGGESTED_ROW_H * math.max(#suggestedEntries, 1) + 8)
+
+local suggestedLink = Brand.MakeButton(frame, "Suggested Macros", FRAME_WIDTH - Brand.SAFE_MARGIN * 2 - 20, 22)
+suggestedLink:SetPoint("TOP", suggestedDivider, "BOTTOM", 0, -10)
+if #suggestedEntries == 0 then
+    suggestedLink.label:SetTextColor(0.45, 0.45, 0.45)
+    suggestedLink:SetScript("OnEnter", function(self)
+        self.label:SetTextColor(0.45, 0.45, 0.45)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("No curated suggested macros for your class yet.")
+        GameTooltip:Show()
+    end)
+    suggestedLink:SetScript("OnLeave", function() GameTooltip:Hide() end)
+else
+    suggestedLink:SetScript("OnClick", function()
+        if suggestedList:IsShown() then
+            suggestedList:Hide()
+        else
+            suggestedList:ClearAllPoints()
+            suggestedList:SetPoint("TOP", suggestedLink, "BOTTOM", 0, -2)
+            suggestedList:Show()
+        end
+    end)
+end
+
+local customDividerAnchor = suggestedLink
+
+--------------------------------------------------------------------------
 -- Custom Macro -- unchanged logic, just laid out in the single column now.
 --------------------------------------------------------------------------
 local customDivider = frame:CreateTexture(nil, "ARTWORK")
 customDivider:SetColorTexture(0.16, 0.12, 0.05, 1)
 customDivider:SetHeight(Brand.LINE_THICKNESS)
-customDivider:SetPoint("TOPLEFT", lastSlotBtn, "BOTTOMLEFT", 0, -14)
-customDivider:SetPoint("TOPRIGHT", lastSlotBtn, "BOTTOMRIGHT", 0, -14)
+customDivider:SetPoint("TOPLEFT", customDividerAnchor, "BOTTOMLEFT", 0, -14)
+customDivider:SetPoint("TOPRIGHT", customDividerAnchor, "BOTTOMRIGHT", 0, -14)
 
 local customLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 customLabel:SetPoint("TOP", customDivider, "BOTTOM", 0, -10)
@@ -971,9 +1204,14 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
     if db.nextPotionMinLevel then
         local level = UnitLevel("player")
         if level >= db.nextPotionMinLevel then
-            print("|cff33ff99Xal's AutoMac|r: You can use a stronger potion now! Type /xam and click 'Healing'.")
-            if UIErrorsFrame then
-                UIErrorsFrame:AddMessage("A stronger potion is available -- update your potion macro!", 1, 0.8, 0)
+            local mode = addonTable.Options and addonTable.Options:Get("potionNotifyMode", addonTable.Options.NOTIFY_CHAT)
+            local msg = "A stronger potion is available -- update your potion macro!"
+            if mode == addonTable.Options.NOTIFY_RAIDWARNING then
+                RaidWarningFrame:AddMessage(msg, 1, 0.2, 0.2)
+            elseif mode == addonTable.Options.NOTIFY_ERROR then
+                if UIErrorsFrame then UIErrorsFrame:AddMessage(msg, 1, 0.8, 0) end
+            else
+                print("|cff33ff99Xal's AutoMac|r: You can use a stronger potion now! Type /xam and click 'Healing'.")
             end
             db.nextPotionMinLevel = nil -- next scan will set a fresh threshold
         end
