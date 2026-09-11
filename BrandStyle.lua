@@ -20,9 +20,9 @@ addonTable.BrandStyle = {}
 local Brand = addonTable.BrandStyle
 
 -- ── Colours (r, g, b) ─────────────────────────────────────────
-Brand.ACCENT = { 0.72, 0.55, 0.22 }   -- warm bronze-gold
+Brand.ACCENT = { 0.72, 0.30, 0.0 }    -- deep, dark, burnt orange (was warm bronze-gold, 2026-09-02 rebrand)
 Brand.GOLD   = { 0.60, 0.47, 0.30 }   -- secondary/body text tone
-Brand.BG     = { 0.035, 0.035, 0.035, 1 } -- near-black, fully opaque
+Brand.BG     = { 0.03, 0.028, 0.06, 1 } -- dark indigo leaning purple, #08070f (was near-black, 2026-09-02 rebrand)
 Brand.LINE_THICKNESS = 2 -- minimum for ANY border/divider - never go below this
 -- Minimum gap between a panel's true outer edge and the nearest button/text
 -- (close buttons especially). DrawBorder()'s line occupies out to 8px in
@@ -80,12 +80,10 @@ function Brand.Title(parent, text, size, anchorPoint, relTo, relPoint, x, y)
     return title
 end
 
--- Unselected label color - a warm amber-orange (matched from a reference
--- screenshot of WoW's own "World Quests" header text, 2026-08-09). Not the
--- same as Brand.GOLD (that's the muted secondary body-text tone used
--- elsewhere) - this is deliberately more vivid/orange so an inactive
--- button label still pops against the dark background.
-local BTN_LABEL_UNSELECTED = { 0.95, 0.60, 0.10 }
+-- Unselected label color - same as Brand.ACCENT now (2026-09-02 rebrand),
+-- matching the standard set on Routes/Quest Compass rather than its own
+-- separate amber.
+local BTN_LABEL_UNSELECTED = Brand.ACCENT
 
 -- Text-link style, ported from Xal's Xpedited Routes (confirmed 2026-08-17,
 -- replaces the old boxed/bordered button entirely - "I don't like the
