@@ -3,10 +3,18 @@
 ## Notes: Generates personalized interrupt, leveling-aware healing potion, and DPS potion macros at the click of a button.
 ## Author: Xal
 ## X-Curse-Project-ID: 1652469
-## Version: 1.0.1
+## Version: 1.1.0
 ## SavedVariables: XalsAutoMacDB
 ## IconTexture: Interface\Icons\INV_Misc_Book_09
 
+libs\LibStub\LibStub.lua
+libs\CallbackHandler\CallbackHandler-1.0.lua
+libs\LibDataBroker\LibDataBroker-1.1.lua
+libs\LibDBIcon\LibDBIcon-1.0.lua
+
 BrandStyle.lua
 Core.lua
+Options.lua
+MacroBuilder.lua
+MinimapButton.lua
 WhatsNew.lua
