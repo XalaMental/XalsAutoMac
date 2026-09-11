@@ -54,7 +54,6 @@ local function BuildFrame(installedVersion)
     f:SetClampedToScreen(true)
 
     Brand.ApplyBackground(f)
-    Brand.ApplyBackgroundImage(f)
     Brand.DrawBorder(f)
 
     local data = W.WHATS_NEW
