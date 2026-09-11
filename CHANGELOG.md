@@ -1,5 +1,20 @@
 # Xal's AutoMac - Changelog
 
+## 1.1.0 - September 11, 2026
+
+---
+
+Bigger update than I planned, but it all kept building on itself. Started with giving every class a curated list of the well-known macros you'd find in any good class guide, right in the panel. Then I figured a minimap button was overdue so you don't have to remember a slash command. That needed a real Options window, which got me thinking about the biggest gap in this addon: everything it does for you is great, but the moment you wanted something custom, you still had to know macro syntax. So the last piece is a real macro builder for people who don't know that syntax and don't want to learn it - pick a spell, pick plain-language options from dropdowns, even chain "if this, else that" conditions, and watch the real macro text build itself. Also gave the whole addon its indigo/orange look to match the rest of the family.
+
+### 🆕 New
+- **Suggested Macros** - a link in the panel shows a handful of well-known, class-specific macros (cooldown combos, mouseover heals/utility, defensive tricks) for your character's actual class. Click one and it's created and selected for you, just like Generate.
+- **Minimap button** - a launcher icon on the minimap; left-click opens Options.
+- **Options window** - show/hide the minimap button, and choose where the "you can use a stronger potion now" notice shows up (chat, the error banner, or the big Raid Warning banner).
+- **Macro Builder** - build a macro without knowing the syntax. Type a spell, pick Target/State/Dead/Combat from dropdowns (each explained in plain language), and watch the real macro text build live. Chain multiple conditions together for "if the target's dead, do this - otherwise, do that" macros.
+
+### 🎨 Under the hood
+- Rebranded to the current family look - dark indigo background, deep orange accent, no border on the main panels.
+
 ## 1.0.1 - August 31, 2026
 
 ---
