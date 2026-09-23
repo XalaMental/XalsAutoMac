@@ -86,11 +86,8 @@ local function MeasureDropdownWidth(options)
     return widest
 end
 
--- A labeled dropdown for one option group -- WowStyle1DropdownTemplate is
--- Blizzard's own current dropdown-button template (verified against
--- Blizzard's own 11_0_0_MenuImplementationGuide.lua), not a hand-rolled
--- substitute. Each CreateRadio entry gets a tooltip via AddInitializer,
--- the documented way to customize a generated menu button.
+-- A labeled dropdown for one option group -- Brand.MakeDropdown, the
+-- current brand-styled widget (not Blizzard's native dropdown template).
 local function AddDropdown(parent, anchorAbove, gap, label, description, options, getValue, setValue, defaultLabel)
     local heading = Brand.FS(parent, label, Brand.BODY_FONT_PATH, LABEL_FONT_SIZE, nil,
         Brand.GOLD[1], Brand.GOLD[2], Brand.GOLD[3])
@@ -103,30 +100,16 @@ local function AddDropdown(parent, anchorAbove, gap, label, description, options
     desc:SetJustifyH("LEFT")
     desc:SetWordWrap(true)
 
-    local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
+    local dropdown = Brand.MakeDropdown(parent, MeasureDropdownWidth(options)) -- sized to its OWN widest option, not a guess
     dropdown:SetPoint("TOPLEFT", desc, "BOTTOMLEFT", 0, -6)
-    dropdown:SetWidth(MeasureDropdownWidth(options)) -- sized to its OWN widest option, not a guess
-    dropdown:SetDefaultText(defaultLabel)
 
-    dropdown:SetupMenu(function(_, rootDescription)
-        for _, opt in ipairs(options) do
-            local radio = rootDescription:CreateRadio(opt.label,
-                function() return getValue() == opt.value end,
-                function() setValue(opt.value) end)
-            if opt.tip then
-                radio:AddInitializer(function(button)
-                    button:SetScript("OnEnter", function(self)
-                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                        GameTooltip:SetText(opt.label, 1, 1, 1)
-                        GameTooltip:AddLine(opt.tip, 0.8, 0.8, 0.8, true)
-                        GameTooltip:Show()
-                    end)
-                    button:SetScript("OnLeave", function() GameTooltip:Hide() end)
-                end)
-            end
-        end
-    end)
-    dropdown:GenerateMenu() -- populate the initial displayed text immediately, not just after first open
+    local ddOptions = {}
+    for _, opt in ipairs(options) do
+        table.insert(ddOptions, { key = opt.value, name = opt.label })
+    end
+    dropdown:SetOptions(ddOptions)
+    dropdown:SetValue(getValue())
+    dropdown.OnSelect = setValue
 
     return dropdown
 end
@@ -159,9 +142,16 @@ local function BuildWindow()
     end
 
     Brand.ApplyBackground(f)
+    Brand.DrawBorder(f, 1) -- flush-edge outer window border, current family standard
 
     Brand.Title(f, "Xal's AutoMac Options", 20, "TOP", f, "TOP", 0, -Brand.SAFE_MARGIN - 4)
-    Brand.DrawDivider(f, Brand.SAFE_MARGIN, 46, WIN_W - Brand.SAFE_MARGIN * 2)
+
+    -- Standing link, present on the What's New splash and the main
+    -- Settings page per the family's Discord link standard.
+    local discordLink = Brand.MakeDiscordLink(f)
+    discordLink:SetPoint("TOPRIGHT", f, "TOPRIGHT", -20, -20)
+
+    Brand.DrawHeaderDivider(f, Brand.SAFE_MARGIN, 46, WIN_W - Brand.SAFE_MARGIN * 2)
 
     local minimapDesc = AddToggle(f, nil, 0,
         "Show minimap button",
@@ -224,3 +214,52 @@ function Options:Toggle()
     local f = BuildWindow()
     if f:IsShown() then f:Hide() else f:Show() end
 end
+
+--------------------------------------------------------------------------
+-- Native AddOns list entry (Escape -> Options -> AddOns -> Xal's AutoMac)
+-- -- standing rule for every addon in the family, same pattern as Armoire's
+-- SettingsPanel.lua: a small canvas panel with a button that opens the
+-- real standalone window, registered via Settings.RegisterCanvasLayoutCategory.
+--------------------------------------------------------------------------
+local function BuildCanvasPanel()
+    local panel = CreateFrame("Frame")
+    panel.name = "Xal's AutoMac"
+
+    local title = Brand.FS(panel, panel.name, Brand.BODY_FONT_PATH, 22, nil,
+        Brand.ACCENT[1], Brand.ACCENT[2], Brand.ACCENT[3])
+    title:SetPoint("TOPLEFT", panel, "TOPLEFT", 16, -16)
+
+    local blurb = Brand.FS(panel,
+        "Generates personalized interrupt, healing potion, DPS potion, and other utility macros for your class and spec.",
+        Brand.BODY_FONT_PATH, DESC_FONT_SIZE, nil, Brand.GOLD[1], Brand.GOLD[2], Brand.GOLD[3])
+    blurb:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -10)
+    blurb:SetPoint("RIGHT", panel, "RIGHT", -RIGHT_MARGIN, 0)
+    blurb:SetJustifyH("LEFT")
+    blurb:SetWordWrap(true)
+
+    local openBtn = Brand.MakeButton(panel, "Open Xal's AutoMac Options", 220, 28, function()
+        Options:Open()
+    end)
+    openBtn:SetPoint("TOPLEFT", blurb, "BOTTOMLEFT", 0, -20)
+
+    return panel
+end
+
+function Options:Init()
+    if self.category then return end
+    local panel = BuildCanvasPanel()
+    if Settings and Settings.RegisterCanvasLayoutCategory then
+        local category = Settings.RegisterCanvasLayoutCategory(panel, panel.name)
+        category.ID = panel.name
+        Settings.RegisterAddOnCategory(category)
+        self.category = category
+    elseif InterfaceOptions_AddCategory then
+        InterfaceOptions_AddCategory(panel)
+    end
+end
+
+local initFrame = CreateFrame("Frame")
+initFrame:RegisterEvent("PLAYER_LOGIN")
+initFrame:SetScript("OnEvent", function()
+    Options:Init()
+end)
