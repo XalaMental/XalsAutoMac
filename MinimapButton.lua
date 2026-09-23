@@ -2,11 +2,12 @@
 -- Xal's AutoMac
 --
 -- The minimap launcher icon, via LibDataBroker + LibDBIcon - same
--- combination the rest of the family uses. Left-click opens Options
--- (the only other window this addon has besides the main /xam panel).
--- Full custom-shaped icon, not masked into Blizzard's standard circular
--- border (RemoveButtonBorder/RemoveButtonBackground/SetButtonIcon,
--- LibDBIcon rev 56+).
+-- combination the rest of the family uses. Left-click opens the main
+-- /xam panel (the addon's actual primary interface, same as the slash
+-- command); right-click opens Options. Full custom-shaped icon, not
+-- masked into Blizzard's standard circular border
+-- (RemoveButtonBorder/RemoveButtonBackground/SetButtonIcon, LibDBIcon
+-- rev 56+).
 
 local ADDON_NAME, addonTable = ...
 addonTable.MinimapButton = {}
@@ -20,12 +21,17 @@ function MB:Register()
         type = "launcher",
         text = "Xal's AutoMac",
         icon = MINIMAP_ICON,
-        OnClick = function()
-            addonTable.Options:Open()
+        OnClick = function(_, button)
+            if button == "RightButton" then
+                addonTable.Options:Open()
+            else
+                addonTable.ToggleMainPanel()
+            end
         end,
         OnTooltipShow = function(tooltip)
             tooltip:AddLine("Xal's AutoMac")
-            tooltip:AddLine("|cff999999Left-click|r to open Options")
+            tooltip:AddLine("|cff999999Left-click|r to open the panel")
+            tooltip:AddLine("|cff999999Right-click|r to open Options")
         end,
     })
 
