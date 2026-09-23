@@ -8,6 +8,7 @@ globals = {
     "SLASH_XALSAUTOMAC1",
     "SLASH_XALSAUTOMAC2",
     "SlashCmdList",
+    "StaticPopupDialogs", -- a real mutable table addons add popup entries to
 }
 
 read_globals = {
@@ -59,4 +60,8 @@ read_globals = {
     "UISpecialFrames",
     "GameFontHighlightSmall",
     "RaidWarningFrame",
+    "Settings",
+    "InterfaceOptions_AddCategory",
+    "StaticPopup_Show",
+    "MacroPopupFrame",
 }
