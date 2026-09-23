@@ -1,5 +1,22 @@
 # Xal's AutoMac - Changelog
 
+## 1.2.0 - September 23, 2026
+
+---
+
+The look across all my addons keeps evolving as I figure out what actually feels clean, and AutoMac was overdue for a pass - I'm always chasing something visually appealing but still simple, not cluttered. While I was going through it I ran into a couple of real bugs, too: some of the macros this thing builds for you weren't showing an icon, and Blizzard's own "Change Name/Icon" window was popping up somewhere you couldn't actually see or click it. Both fixed, hopefully it's all working right now. Thanks for sticking with me on this one.
+
+### 🆕 New
+- Options now also shows up under Escape -> Options -> AddOns -> Xal's AutoMac, same as everywhere else you'd expect to find it.
+
+### 🔧 Fixed
+- Every generated macro (Interrupt, Healing, DPS Potion, Cleanse, Mass Dispel, Custom Macro, Suggested Macros) now gets a real icon instead of a few of them showing blank.
+- Blizzard's own "Change Name/Icon" popup was opening behind our panel where it couldn't be seen or clicked - it now shows properly.
+- Minimap button's left-click now opens the actual panel (it was only opening Options before).
+
+### 🎨 Under the hood
+- Brought the look current with the rest of the family - refreshed colors, fonts, a proper border back on every window, and a matching custom dropdown style throughout.
+
 ## 1.1.0 - September 11, 2026
 
 ---
