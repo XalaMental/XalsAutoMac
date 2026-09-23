@@ -3,10 +3,9 @@
 --
 -- The "macro for dummies" builder - pick a spell, pick the conditional
 -- tags (target/state/dead/combat) from real dropdown menus
--- (WowStyle1DropdownTemplate + CreateRadio, the actual current Blizzard
--- dropdown system, verified against Blizzard's own
--- 11_0_0_MenuImplementationGuide.lua), see the live macro text build
--- itself. Every section has real, ALWAYS-VISIBLE explanation text, not
+-- (Brand.MakeDropdown, the current brand-styled widget, not Blizzard's
+-- native dropdown template), see the live macro text build itself. Every
+-- section has real, ALWAYS-VISIBLE explanation text, not
 -- just a hover tooltip -- someone who doesn't already know macro syntax
 -- (the entire point of this tool) has no reason to hover to discover
 -- there's more information available.
@@ -101,8 +100,10 @@ local function MeasureDropdownWidth(options)
     return widest
 end
 
--- A labeled dropdown for one option group on a specific clause. Every
--- created widget is appended to `track` so a rebuild can hide it later.
+-- A labeled dropdown for one option group on a specific clause -- built on
+-- Brand.MakeDropdown, the current brand-styled widget (not Blizzard's
+-- native dropdown template). Every created widget is appended to `track`
+-- so a rebuild can hide it later.
 local function AddDropdown(parent, track, anchorAbove, gap, label, description, options, clause, stateKey, defaultLabel)
     local heading = Brand.FS(parent, label, Brand.BODY_FONT_PATH, 14, nil,
         Brand.GOLD[1], Brand.GOLD[2], Brand.GOLD[3])
@@ -116,31 +117,19 @@ local function AddDropdown(parent, track, anchorAbove, gap, label, description, 
     desc:SetWordWrap(true)
     table.insert(track, desc)
 
-    local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
+    local dropdown = Brand.MakeDropdown(parent, MeasureDropdownWidth(options)) -- sized to its OWN widest option, not a guess
     dropdown:SetPoint("TOPLEFT", desc, "BOTTOMLEFT", 0, -6)
-    dropdown:SetWidth(MeasureDropdownWidth(options)) -- sized to its OWN widest option, not a guess
-    dropdown:SetDefaultText(defaultLabel)
 
-    dropdown:SetupMenu(function(_, rootDescription)
-        for _, opt in ipairs(options) do
-            local radio = rootDescription:CreateRadio(opt.label,
-                function() return clause[stateKey] == opt.value end,
-                function()
-                    clause[stateKey] = opt.value
-                    UpdatePreview()
-                end)
-            radio:AddInitializer(function(button)
-                button:SetScript("OnEnter", function(self)
-                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    GameTooltip:SetText(opt.label, 1, 1, 1)
-                    GameTooltip:AddLine(opt.tip, 0.8, 0.8, 0.8, true)
-                    GameTooltip:Show()
-                end)
-                button:SetScript("OnLeave", function() GameTooltip:Hide() end)
-            end)
-        end
-    end)
-    dropdown:GenerateMenu() -- populate the initial displayed text immediately, not just after first open
+    local ddOptions = {}
+    for _, opt in ipairs(options) do
+        table.insert(ddOptions, { key = opt.value, name = opt.label })
+    end
+    dropdown:SetOptions(ddOptions)
+    dropdown:SetValue(clause[stateKey])
+    dropdown.OnSelect = function(value)
+        clause[stateKey] = value
+        UpdatePreview()
+    end
     table.insert(track, dropdown)
 
     return dropdown
@@ -215,15 +204,26 @@ local function BuildWindow()
     f:EnableMouse(true)
     f:RegisterForDrag("LeftButton")
     f:SetScript("OnDragStart", f.StartMoving)
-    f:SetScript("OnDragStop", f.StopMovingOrSizing)
+    f:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        local point, _, relPoint, x, y = self:GetPoint()
+        addonTable.Options:Set("macroBuilderPos", { point = point, relPoint = relPoint, x = x, y = y })
+    end)
     f:SetClampedToScreen(true)
-    f:SetPoint("CENTER", UIParent, "CENTER", -200, 0)
+
+    local pos = addonTable.Options:Get("macroBuilderPos", nil)
+    if pos and pos.point then
+        f:SetPoint(pos.point, UIParent, pos.relPoint, pos.x, pos.y)
+    else
+        f:SetPoint("CENTER", UIParent, "CENTER", -200, 0)
+    end
     f.contentWidth = WIN_W - Brand.SAFE_MARGIN * 2
 
     Brand.ApplyBackground(f)
+    Brand.DrawBorder(f, 1) -- flush-edge outer window border, current family standard
 
     Brand.Title(f, "Macro Builder", 20, "TOP", f, "TOP", 0, -Brand.SAFE_MARGIN - 4)
-    Brand.DrawDivider(f, Brand.SAFE_MARGIN, 46, WIN_W - Brand.SAFE_MARGIN * 2)
+    Brand.DrawHeaderDivider(f, Brand.SAFE_MARGIN, 46, WIN_W - Brand.SAFE_MARGIN * 2)
 
     intro = Brand.FS(f, "Build a spell macro without needing to know the syntax -- fill in the fields below and the real macro text is built for you. Add more than one condition for an \"if this, else that\" macro, like casting a different spell on a dead target than a living one.",
         Brand.BODY_FONT_PATH, 13, nil, 0.62, 0.62, 0.62)
@@ -295,9 +295,9 @@ RebuildDynamic = function()
         local body = "#showtooltip\n/cast " .. table.concat(segments, "; ")
         local name = "XAMBuilt"
         if GetMacroIndexByName(name) and GetMacroIndexByName(name) > 0 then
-            EditMacro(GetMacroIndexByName(name), name, "inv_misc_questionmark", body)
+            EditMacro(GetMacroIndexByName(name), name, "INV_Misc_QuestionMark", body)
         else
-            CreateMacro(name, "inv_misc_questionmark", body, true)
+            CreateMacro(name, "INV_Misc_QuestionMark", body, true)
         end
     end)
     table.insert(clauseWidgets, createBtn)
