@@ -54,17 +54,22 @@ local function BuildFrame(installedVersion)
     f:SetClampedToScreen(true)
 
     Brand.ApplyBackground(f)
-    Brand.DrawBorder(f)
+    Brand.DrawBorder(f, 1) -- flush-edge outer window border, current family standard
 
     local data = W.WHATS_NEW
     Brand.Title(f, "What's New", 22, "TOP", f, "TOP", 0, -20)
+
+    -- Standing link, every splash regardless of that version's content -
+    -- not part of the release notes themselves.
+    local discordLink = Brand.MakeDiscordLink(f)
+    discordLink:SetPoint("TOPRIGHT", f, "TOPRIGHT", -20, -20)
 
     local verLine = Brand.FS(f, "Version " .. installedVersion .. (data.date and ("  ·  " .. data.date) or ""),
         Brand.BODY_FONT_PATH, 12, "", Brand.GOLD[1], Brand.GOLD[2], Brand.GOLD[3])
     verLine:SetPoint("TOP", f, "TOP", 0, -50)
     verLine:SetJustifyH("CENTER")
 
-    Brand.DrawDivider(f, Brand.SAFE_MARGIN, 66, FW - Brand.SAFE_MARGIN * 2)
+    Brand.DrawHeaderDivider(f, Brand.SAFE_MARGIN, 66, FW - Brand.SAFE_MARGIN * 2)
 
     local y = 80
     if data.intro and data.intro ~= "" then
