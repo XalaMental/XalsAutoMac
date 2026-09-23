@@ -22,7 +22,15 @@ local Brand = addonTable.BrandStyle
 -- ── Colours (r, g, b) ─────────────────────────────────────────
 Brand.ACCENT = { 0.72, 0.30, 0.0 }    -- deep, dark, burnt orange (was warm bronze-gold, 2026-09-02 rebrand)
 Brand.GOLD   = { 0.60, 0.47, 0.30 }   -- secondary/body text tone
-Brand.BG     = { 0.03, 0.028, 0.06, 1 } -- dark indigo leaning purple, #08070f (was near-black, 2026-09-02 rebrand)
+Brand.BG     = { 0.012, 0.011, 0.024, 1 } -- near-black indigo, #03030a (darkened again 2026-09-20, was #08070f)
+-- Window title, the ONE header divider directly under it, and (if this
+-- addon ever grows a sidebar) a selected sidebar link - #681417, dark
+-- brick red. Confirmed family-wide 2026-09-20, distinct from Brand.ACCENT.
+Brand.HEADER_COLOR = { 0.4078, 0.0784, 0.0902 }
+-- Every OTHER divider (section dividers, list dividers) and panel/card
+-- edges (DrawBorder's default) - #101020, near-black indigo. Confirmed
+-- family-wide 2026-09-20, replaces Brand.ACCENT as DrawBorder's color.
+Brand.DIVIDER_COLOR = { 0.0627, 0.0627, 0.1255 }
 Brand.LINE_THICKNESS = 2 -- minimum for ANY border/divider - never go below this
 -- Minimum gap between a panel's true outer edge and the nearest button/text
 -- (close buttons especially). DrawBorder()'s line occupies out to 8px in
@@ -59,22 +67,21 @@ function Brand.FS(parent, text, fontPath, size, flags, r, g, b)
 end
 
 -- ── Font paths ────────────────────────────────────────────────
--- Header/title font: Simply Sans Bold (bundled, SIL OFL). Body/label font:
--- Fira Sans Medium (bundled, SIL OFL). Both ship in this addon's own Fonts/
--- folder (Fonts/CustomFont.ttf, Fonts/FiraSans-Medium.ttf, plus their two
--- LICENSE.txt files), copied from Xal's Quest Compass.
-Brand.TITLE_FONT_PATH = "Interface\\AddOns\\XalsAutoMac\\Fonts\\CustomFont.ttf"
-Brand.BODY_FONT_PATH = "Interface\\AddOns\\XalsAutoMac\\Fonts\\FiraSans-Medium.ttf"
+-- Cinzel Bold for titles, Inter Regular for body text (bundled, both SIL
+-- OFL) - current family default as of 2026-09-19, supersedes Simply Sans
+-- Bold/Fira Sans Medium. Ship in this addon's own Fonts/ folder.
+Brand.TITLE_FONT_PATH = "Interface\\AddOns\\XalsAutoMac\\Fonts\\Cinzel-Bold.ttf"
+Brand.BODY_FONT_PATH = "Interface\\AddOns\\XalsAutoMac\\Fonts\\Inter-Regular.ttf"
 
 -- ── Title()  ─ the branded title treatment, with its drop-shadow layer, in
 -- one call. Returns the visible (front) fontstring.
 function Brand.Title(parent, text, size, anchorPoint, relTo, relPoint, x, y)
-    local shadow = Brand.FS(parent, text, Brand.TITLE_FONT_PATH, size, "OUTLINE", 0.05, 0.04, 0.02)
-    PixelUtil.SetPoint(shadow, anchorPoint, relTo, relPoint, x + 2, y - 2)
+    local shadow = Brand.FS(parent, text, Brand.TITLE_FONT_PATH, size, "OUTLINE", 0, 0, 0)
+    PixelUtil.SetPoint(shadow, anchorPoint, relTo, relPoint, x + 4, y - 4)
     shadow:SetJustifyH("CENTER")
 
     local title = Brand.FS(parent, text, Brand.TITLE_FONT_PATH, size, "OUTLINE",
-        Brand.ACCENT[1], Brand.ACCENT[2], Brand.ACCENT[3])
+        Brand.HEADER_COLOR[1], Brand.HEADER_COLOR[2], Brand.HEADER_COLOR[3])
     PixelUtil.SetPoint(title, anchorPoint, relTo, relPoint, x, y)
     title:SetJustifyH("CENTER")
     return title
@@ -161,7 +168,7 @@ end
 function Brand.DrawBorder(f, inset)
     inset = inset or 6
     local thick = Brand.LINE_THICKNESS
-    local r, g, b = Brand.ACCENT[1], Brand.ACCENT[2], Brand.ACCENT[3]
+    local r, g, b = Brand.DIVIDER_COLOR[1], Brand.DIVIDER_COLOR[2], Brand.DIVIDER_COLOR[3]
 
     local top = f:CreateTexture(nil, "ARTWORK")
     PixelUtil.SetPoint(top, "TOPLEFT", f, "TOPLEFT", inset, -inset)
@@ -193,7 +200,16 @@ end
 -- ── DrawDivider()  ─ the thin section-separator line used between content
 -- blocks (feature lists, header bars, etc.)
 function Brand.DrawDivider(parent, x, y, width)
-    return Brand.T(parent, x, y, width, Brand.LINE_THICKNESS, 0.16, 0.12, 0.05, 1)
+    return Brand.T(parent, x, y, width, Brand.LINE_THICKNESS,
+        Brand.DIVIDER_COLOR[1], Brand.DIVIDER_COLOR[2], Brand.DIVIDER_COLOR[3], 1)
+end
+
+-- ── DrawHeaderDivider()  ─ same as DrawDivider, but in Brand.HEADER_COLOR -
+-- used ONLY for the single divider directly under a window's main title,
+-- never for section dividers within a page (those stay DrawDivider above).
+function Brand.DrawHeaderDivider(parent, x, y, width)
+    return Brand.T(parent, x, y, width, Brand.LINE_THICKNESS,
+        Brand.HEADER_COLOR[1], Brand.HEADER_COLOR[2], Brand.HEADER_COLOR[3], 1)
 end
 
 -- ── ApplyBackground()  ─ the standard opaque near-black frame background.
@@ -415,4 +431,174 @@ function Brand.MakeCheckbox(parent, size)
     end)
 
     return cb
+end
+
+-- ── Discord link ──────────────────────────────────────────────
+-- A permanent, standing text link (not a per-release thing) meant to live
+-- on the What's New splash and the main Options window - Lua can't open a
+-- browser directly, so clicking it pops the standard WoW copy-a-URL dialog
+-- (an auto-selected, read-only edit box) instead. Ported from Routes' real
+-- implementation. Popup key is namespaced per-addon (StaticPopupDialogs is
+-- a shared global table - reusing a key across two addons means whichever
+-- loads last wins).
+Brand.DISCORD_URL = "https://discord.gg/9SwrQDJeCe"
+
+StaticPopupDialogs["XALSAUTOMAC_COPY_URL"] = {
+    text = "%s",
+    button1 = "Close",
+    hasEditBox = true,
+    editBoxWidth = 260,
+    OnShow = function(self, data)
+        self.editBox:SetText(data or Brand.DISCORD_URL)
+        self.editBox:HighlightText()
+        self.editBox:SetFocus()
+    end,
+    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+function Brand.MakeDiscordLink(parent)
+    local btn = CreateFrame("Button", nil, parent)
+    btn:SetSize(130, 20)
+
+    local label = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    label:SetPoint("LEFT")
+    label:SetText("Join us on Discord")
+    label:SetTextColor(Brand.ACCENT[1], Brand.ACCENT[2], Brand.ACCENT[3], 1)
+    btn.label = label
+    btn:SetWidth(label:GetStringWidth())
+
+    btn:SetScript("OnEnter", function() label:SetTextColor(1, 1, 1, 1) end)
+    btn:SetScript("OnLeave", function()
+        label:SetTextColor(Brand.ACCENT[1], Brand.ACCENT[2], Brand.ACCENT[3], 1)
+    end)
+    btn:SetScript("OnClick", function()
+        StaticPopup_Show("XALSAUTOMAC_COPY_URL", nil, nil, Brand.DISCORD_URL)
+    end)
+
+    return btn
+end
+
+-- ── MakeDropdown()  ─ brand-styled dropdown, used instead of Blizzard's
+-- native UIDropDownMenuTemplate (confirmed 2026-09-22 - lean on our own
+-- styled widgets over Blizzard's stock ones wherever we already have one).
+-- Ported verbatim from Xal's Roster Roundup's BrandStyle.lua.
+-- Usage: dd = Brand.MakeDropdown(parent, width); dd:SetOptions({{key=,
+-- name=}, ...}); dd:SetValue(key); dd.OnSelect = function(key) ... end.
+-- The option list is its own top-level frame (not a child of the dropdown
+-- button) so it can draw above a scrollable page's own clipping, same
+-- reason Blizzard's native dropdowns also float above everything.
+function Brand.MakeDropdown(parent, width)
+    local height = 26
+    local dd = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    PixelUtil.SetSize(dd, width, height)
+    dd:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    dd:SetBackdropColor(0.1, 0.1, 0.1, 0.6)
+    Brand.DrawBorder(dd, 0)
+
+    local label = dd:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    label:SetPoint("LEFT", 10, 0)
+    label:SetPoint("RIGHT", -22, 0)
+    label:SetJustifyH("LEFT")
+    label:SetTextColor(0.9, 0.9, 0.9)
+    dd.label = label
+
+    local arrow = dd:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    arrow:SetPoint("RIGHT", -8, 0)
+    arrow:SetText("v")
+    arrow:SetTextColor(Brand.ACCENT[1], Brand.ACCENT[2], Brand.ACCENT[3])
+
+    dd:SetScript("OnEnter", function(self) self:SetBackdropColor(0.18, 0.18, 0.18, 0.75) end)
+    dd:SetScript("OnLeave", function(self) self:SetBackdropColor(0.1, 0.1, 0.1, 0.6) end)
+
+    -- List panel: sized to exactly fit its own rows (no fixed height that
+    -- could either clip a long list or leave dead space on a short one).
+    -- Built once, rows added/reused as SetOptions is called.
+    local list = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    list:SetFrameStrata("FULLSCREEN_DIALOG")
+    Brand.ApplyBackground(list)
+    Brand.DrawBorder(list, 0)
+    list:Hide()
+
+    -- Invisible full-screen catcher so clicking anywhere outside the list
+    -- closes it - the standard way an addon fakes a native dropdown's
+    -- click-away-to-close behavior.
+    local catcher = CreateFrame("Frame", nil, UIParent)
+    catcher:SetAllPoints(UIParent)
+    catcher:SetFrameStrata("FULLSCREEN")
+    catcher:EnableMouse(true)
+    catcher:Hide()
+
+    local function CloseList()
+        list:Hide()
+        catcher:Hide()
+    end
+    catcher:SetScript("OnMouseDown", CloseList)
+
+    dd.options = {}
+    dd.rows = {}
+
+    local ROW_HEIGHT = 22
+    function dd:SetOptions(options)
+        self.options = options
+        for _, row in ipairs(self.rows) do row:Hide() end
+        for i, opt in ipairs(options) do
+            local row = self.rows[i]
+            if not row then
+                row = CreateFrame("Button", nil, list)
+                row:SetHeight(ROW_HEIGHT)
+                local hl = row:CreateTexture(nil, "HIGHLIGHT")
+                hl:SetAllPoints()
+                hl:SetColorTexture(Brand.ACCENT[1], Brand.ACCENT[2], Brand.ACCENT[3], 0.25)
+                local text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                text:SetPoint("LEFT", 8, 0)
+                text:SetPoint("RIGHT", -8, 0)
+                text:SetJustifyH("LEFT")
+                row.text = text
+                self.rows[i] = row
+            end
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", 2, -2 - (i - 1) * ROW_HEIGHT)
+            row:SetPoint("RIGHT", -2, 0)
+            row.text:SetText(opt.name)
+            row:SetScript("OnClick", function()
+                dd:SetValue(opt.key)
+                CloseList()
+                if dd.OnSelect then dd.OnSelect(opt.key) end
+            end)
+            row:Show()
+        end
+        list:SetHeight(#options * ROW_HEIGHT + 4)
+    end
+
+    function dd:SetValue(key)
+        self.value = key
+        for _, opt in ipairs(self.options) do
+            if opt.key == key then
+                label:SetText(opt.name)
+                return
+            end
+        end
+    end
+
+    function dd:GetValue()
+        return self.value
+    end
+
+    dd:SetScript("OnClick", function(self)
+        if list:IsShown() then
+            CloseList()
+            return
+        end
+        list:ClearAllPoints()
+        list:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
+        list:SetWidth(width)
+        list:Show()
+        catcher:Show()
+    end)
+
+    return dd
 end
